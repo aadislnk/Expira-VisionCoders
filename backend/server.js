@@ -1,0 +1,48 @@
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+import authRoutes from "./routes/authRoutes.js";
+import productScanRoutes from "./routes/productScan.js";
+import productRoutes from "./routes/productRoutes.js";
+import challengeRoutes from "./routes/challengeRoutes.js";
+import pointRoutes from "./routes/pointRoutes.js";
+import ecoScoreRoutes from "./routes/ecoScoreRoutes.js";
+import { startExpiryReminderCron } from "./cron/expiryReminderCron.js";
+
+dotenv.config({ path: "./.env" });
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/expira";
+
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use("/api/auth", authRoutes);
+app.use("/api/products/scan", productScanRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/challenges", challengeRoutes);
+app.use("/api/points", pointRoutes);
+app.use("/api/eco-score", ecoScoreRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Expira authentication server is running.");
+});
+
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Auth server running on http://localhost:${PORT}`);
+      startExpiryReminderCron();
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to connect to MongoDB:", error);
+    process.exit(1);
+  });
