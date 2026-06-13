@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import ReminderHistory from "../models/ReminderHistory.js";
 import { sendExpiryAlertEmail } from "./emailService.js";
+import { sendExpiryAlertWhatsApp } from "./whatsappService.js";
 import { calculateDaysLeft, getReminderLevel } from "../utils/expiryUtils.js";
 
 export async function runExpiryReminderCheck(now = new Date()) {
@@ -9,6 +10,8 @@ export async function runExpiryReminderCheck(now = new Date()) {
     checked: products.length,
     sent: 0,
     skipped: 0,
+    whatsappSent: 0,
+    whatsappSkipped: 0,
   };
 
   for (const product of products) {
@@ -36,6 +39,14 @@ export async function runExpiryReminderCheck(now = new Date()) {
     if (!wasSent) {
       summary.skipped += 1;
       continue;
+    }
+
+    const wasWhatsAppSent = await sendExpiryAlertWhatsApp({ product, daysLeft, level });
+
+    if (wasWhatsAppSent) {
+      summary.whatsappSent += 1;
+    } else {
+      summary.whatsappSkipped += 1;
     }
 
     await ReminderHistory.create({
