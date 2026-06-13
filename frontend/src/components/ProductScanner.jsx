@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL, authHeaders, handleUnauthorized } from "../config/api";
+import CategoryTable from "./CategoryTable";
 
 const initialEditedProduct = {
   name: "",
@@ -268,6 +269,8 @@ function ProductScanner() {
           </button>
         </form>
       )}
+
+      <CategoryTable visible={Boolean(ocrResult)} />
     </div>
   );
 }
